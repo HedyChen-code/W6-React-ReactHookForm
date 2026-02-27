@@ -23,10 +23,10 @@ const Header = () => {
               <NavLink className="nav-link" to='/cart'>購物車</NavLink>
             </li>
             <li className="nav-item">
-              <NavLink className="nav-link" to='/cart'>結帳</NavLink>
+              <NavLink className="nav-link" to='/checkout'>結帳</NavLink>
             </li>
             <li className="nav-item">
-              <NavLink className="nav-link" to='/cart'>登入</NavLink>
+              <NavLink className="nav-link" to='/login'>登入</NavLink>
             </li>
           </ul>
         </div>

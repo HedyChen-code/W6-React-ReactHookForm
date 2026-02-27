@@ -9,14 +9,15 @@ const Products = () => {
   const [ products, setProducts ] = useState([]);
   
   const getProducts = async () => {
-  try {
-    const url = `${API_BASE}/api/${API_PATH}/products`;
-    const res = await axios.get(url);
-    setProducts(res.data.products);
-  } catch (error) {
-    console.log('取得產品資料失敗：', error);
+    try {
+      const url = `${API_BASE}/api/${API_PATH}/products`;
+      const res = await axios.get(url);
+      console.log(res);
+      setProducts(res.data.products);
+    } catch (error) {
+      console.log('取得產品資料失敗：', error);
+    }
   }
-}
 
   useEffect(() => {
     getProducts();

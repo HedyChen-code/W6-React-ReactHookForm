@@ -45,7 +45,7 @@ const Cart = () => {
   }
 
   const deleteCartAll = async () => {
-    const url = `${API_BASE}/api/${API_PATH}/carts`;
+    const url = `${API_BASE}/api/${API_PATH}/cart`;
     const res = await axios.delete(url);
     getCart();
     alert('清空購物車成功！')
