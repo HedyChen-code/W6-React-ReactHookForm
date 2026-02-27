@@ -6,6 +6,7 @@ import NotFound from "../views/Front/NotFound";
 import Products from "../views/Front/Products";
 import SingleProducts from "../views/Front/SingleProduct";
 import Login from "../views/Front/Login";
+import ProductTabel from "../components/ProductTable"
 
 
 const routes = [
@@ -38,6 +39,10 @@ const routes = [
         element: <Login />
       },
     ]
+  },
+  {
+    path: '/admin',
+    element: <ProductTabel />
   },
   {
     path: '*',

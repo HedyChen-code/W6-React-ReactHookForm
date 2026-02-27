@@ -32,7 +32,7 @@ function Login ( { getProducts, setIsAuth } ) {
   } = useForm({
      mode: "onChange",
      defaultValues: { 
-      username: 'lifesunny719@gamil.com' 
+      username: 'lifesunny719@gmail.com' 
       }
     },
   );
@@ -47,7 +47,7 @@ function Login ( { getProducts, setIsAuth } ) {
       document.cookie = `jiaToken=${token}; expires=${new Date(expired)};`;
       axios.defaults.headers.common.Authorization = token;
 
-      navigate('/');
+      navigate('/admin');
 
       // getProducts();
       // setIsAuth(true);
