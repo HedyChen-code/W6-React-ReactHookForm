@@ -183,7 +183,7 @@ function ProductModal ( {
                 </p>
               ) : (
                 <div className="row">
-                  <div className="col-sm-4">
+                  <div className="col-md-4">
                     <div className="mb-2">
                       <div className="mb">
                         <label htmlFor="fileUpload" className="form-label">圖片上傳</label>
@@ -259,7 +259,7 @@ function ProductModal ( {
                       }
                     </div>
                   </div>
-                  <div className="col-sm-8">
+                  <div className="col-md-8">
                     <div className="mb-3">
                       <label htmlFor="title" className="form-label">標題</label>
                       <input 

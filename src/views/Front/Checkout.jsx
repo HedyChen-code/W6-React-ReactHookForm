@@ -1,14 +1,22 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { currency } from "../../utils/filter";
 import { useForm } from "react-hook-form";
+import { Hourglass } from "react-loader-spinner";
+import * as bootstrap from "bootstrap";
+import SingleProductModal from "../../components/SingleProductModal";
+import { addressValidation, emailValidation, nameValidation, telValidation } from "../../utils/validation";
 
 const API_BASE = import.meta.env.VITE_API_BASE;
 const API_PATH = import.meta.env.VITE_API_PATH;
 
 const Checkout = () => {
+  const [ tempProduct, setTempProduct ] = useState({});
   const [ products, setProducts ] = useState([]);
   const [ cart, setCart ] = useState({ cart: [], });
+  const [ loadingCartId, setLoadingCartId ] = useState(null);
+  const [ loadingProductId, setLoadingProductId ] = useState(null);
+  const productModalRef = useRef(null);
 
   const {
     register,
@@ -46,6 +54,29 @@ const Checkout = () => {
     } catch (error) {
       alert('取得產品資料失敗：', error);
     }
+  }
+  const openModal = () => {
+    productModalRef.current.show();
+  }
+
+  const getSingleProduct = async (id) => {
+    setLoadingProductId(id);
+
+    try {
+      const url = `${API_BASE}/api/${API_PATH}/product/${id}`;
+      const res = await axios.get(url);
+      console.log(res.data.product);
+      setTempProduct(res.data.product);
+      openModal()
+    } catch (error) {
+      alert('取得產品資料失敗：', error);
+    } finally {
+      setLoadingProductId(null);
+    }
+  }
+
+  const closeModal = () => {
+    productModalRef.current.hide();
   }
 
   const getCart = async () => {
@@ -94,9 +125,24 @@ const Checkout = () => {
   useEffect(() => {
     getProducts();
     getCart();
-  }, [])
+
+    productModalRef.current = new bootstrap.Modal('#productModal', {
+      keyboard: false
+    });
+
+    // Modal 關閉時移除焦點
+    document
+      .querySelector("#productModal")
+      .addEventListener("hide.bs.modal", () => {
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+      });
+  }, []);
 
   const addCart = async (id, qty=1) => {
+    setLoadingCartId(id);
+
     const data = {
       product_id: id,
       qty
@@ -109,11 +155,15 @@ const Checkout = () => {
       getCart();
     } catch (error) {
       alert('加入購物車失敗：', error?.response?.data);
+    } finally {
+      setLoadingCartId(null); // 清除 loading 狀態
     }
   }
 
   return (<>
     <div className="container">
+
+      {/* 產品列表 */}
       <table className="table align-middle">
         <thead>
           <tr>
@@ -143,18 +193,39 @@ const Checkout = () => {
               </td>
               <td>
                 <div className="btn-group btn-group-sm">
-                  <button type="button" className="btn btn-outline-secondary">
-                    {/* <i className="fas fa-spinner fa-pulse"></i> */}
-                    查看更多
+                  <button  
+                    type="button" 
+                    className="btn btn-outline-secondary"
+                    onClick={ () => getSingleProduct(product.id) }
+                    disabled={ loadingProductId === product.id }
+                  >
+                    {
+                      loadingProductId === product.id ? (
+                        <Hourglass
+                          colors={['#A39485', '#D4C7B9']}
+                          width="80"
+                          height="16"
+                        />
+                      ) : '查看更多'
+                    }
                   </button>
                   <button 
                     type="button" 
                     className="btn btn-outline-danger"
                     onClick={ () => addCart(product.id) }
+                    disabled={ loadingCartId === product.id }
                     onMouseEnter={ (e) => e.target.style.color = "#f8f9fa" }
                     onMouseLeave={ (e) => e.target.style.color = "" }
                   >
-                    加入購物車
+                    {
+                      loadingCartId === product.id ? (
+                        <Hourglass
+                          colors={['#A39485', '#D4C7B9']}
+                          width="80"
+                          height="16"
+                        />
+                      ) : '加入購物車'
+                    }
                   </button>
                 </div>
               </td>
@@ -164,6 +235,7 @@ const Checkout = () => {
         </tbody>
       </table>
 
+      {/* 購物車列表 */}
       <h2 className="mb-4">購物車清單</h2>
       <div className="text-end mb-2">
         <button 
@@ -236,6 +308,7 @@ const Checkout = () => {
         </tfoot>
       </table>
 
+      {/* 填寫寄送資料 表格 */}
       <div className="row justify-content-center my-5">
         <div className="col-md-8 border border-3 px-3 py-5">
           <h3 className="mb-5 text-center">請填寫寄送資料</h3>
@@ -249,13 +322,7 @@ const Checkout = () => {
                   type="text"
                   className={`form-control ${errors.name && 'is-invalid'}`}
                   placeholder="請輸入姓名"
-                  {...register('name', {
-                    required: "請輸入收件人姓名",
-                    minLength: {
-                      value: 2,
-                      message: "姓名至少 2 個字"
-                    }
-                  })}
+                  {...register('name', nameValidation)}
                 />
                 { errors.name && 
                   (<p className="invalid-feedback">{ errors?.name?.message }</p>) 
@@ -272,13 +339,7 @@ const Checkout = () => {
                   type="email"
                   className={`form-control ${errors.email && 'is-invalid'}`}
                   placeholder="請輸入 Email"
-                  {...register('email', {
-                    required: "請輸入 Email",
-                    pattern: {
-                      value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                      message: "Email 格式不正確"
-                    }
-                  })}
+                  {...register('email', emailValidation)}
                 />
                 { errors.email && 
                   (<p className="invalid-feedback">{ errors?.email?.message }</p>)
@@ -295,17 +356,7 @@ const Checkout = () => {
                   type="tel"
                   className={`form-control ${errors.tel && 'is-invalid'}`}
                   placeholder="請輸入電話"
-                  {...register('tel', {
-                    required: "請輸入收件人電話",
-                    minLength: {
-                      value: 8,
-                      message: "電話至少 8 碼"
-                    },
-                    pattern: {
-                      value: /^\d+$/,
-                      message: "電話僅能輸入數字"
-                    }
-                  })}
+                  {...register('tel', telValidation)}
                 />
                 { errors.tel && 
                   (<p className="invalid-feedback">{ errors?.tel?.message }</p>)
@@ -322,9 +373,7 @@ const Checkout = () => {
                   type="text"
                   className={`form-control ${errors.address && 'is-invalid'}`}
                   placeholder="請輸入地址"
-                  {...register('address', {
-                    required: "請輸入收件人地址",
-                  })}
+                  {...register('address', addressValidation)}
                 />
                 { errors.address && 
                   (<p className="invalid-feedback">{ errors?.address?.message }</p>)
@@ -359,6 +408,15 @@ const Checkout = () => {
 
         </div>
       </div>
+
+      {/* 查看更多 開啟單一產品Modal */}
+      <SingleProductModal 
+        productModalRef={ productModalRef }
+        tempProduct={ tempProduct }
+        closeModal={ closeModal }
+        getProducts={ getProducts }
+        addCart={ addCart }
+      />
     </div>
   </>)
 }

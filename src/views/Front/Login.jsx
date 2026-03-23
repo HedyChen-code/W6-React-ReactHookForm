@@ -2,11 +2,28 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
+import { emailValidation, passwordValidation } from '../../utils/validation';
+import Pagination from '../../components/Pagination';
 
 const API_BASE = import.meta.env.VITE_API_BASE;
 const API_PATH = import.meta.env.VITE_API_PATH;
 
-function Login ( { getProducts, setIsAuth } ) {
+function Login () {
+
+  const [ isAuth, setIsAuth ] = useState(false);
+  const [ products, setProducts ] = useState([]);
+  const [ pagination, setPagination ] = useState({});
+
+  const getProducts = async (page=1) => {
+    try {
+      const response = await axios.get(`${API_BASE}/api/${API_PATH}/admin/products?page=${page}`)
+      setProducts(response.data.products);
+      setPagination(response.data.pagination);
+    } catch (error) {
+      console.error(error?.response?.data?.message);
+    }
+    
+  }
 
   // const [ formData, setFormData ] = useState({
   //   username: "lifesunny719@gmail.com",
@@ -27,7 +44,7 @@ function Login ( { getProducts, setIsAuth } ) {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
     reset
   } = useForm({
      mode: "onChange",
@@ -38,8 +55,6 @@ function Login ( { getProducts, setIsAuth } ) {
   );
 
   const onSubmit = async (data) => {
-    // e.preventDefault();
-
     try {
       const response = await axios.post(`${API_BASE}/admin/signin`, data);
       const { expired, token } = response.data;
@@ -49,8 +64,8 @@ function Login ( { getProducts, setIsAuth } ) {
 
       navigate('/admin');
 
-      // getProducts();
-      // setIsAuth(true);
+      getProducts();
+      setIsAuth(true);
 
     } catch (error) {
       alert('登入失敗：' + error?.response?.data?.message);
@@ -77,13 +92,7 @@ function Login ( { getProducts, setIsAuth } ) {
                     // defaultValue={ formData.username }
                     // onChange={ handleInputChange }
                     autoFocus
-                    {...register('username', {
-                      required: "請輸入 Email",
-                      pattern: {
-                        value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                        message: "Email 格式不正確"
-                      }
-                    })}
+                    {...register('username', emailValidation)}
                   />
                   <label htmlFor="username">Email address</label>
                   { errors.username && 
@@ -99,24 +108,18 @@ function Login ( { getProducts, setIsAuth } ) {
                     placeholder="Password"
                     // defaultValue={ formData.password }
                     // onChange={ handleInputChange }
-                    {...register('password', {
-                      required: "請輸入密碼",
-                      minLength: {
-                        value: 6,
-                        message: "密碼長度至少需 6 碼"
-                      }, 
-                      maxLength: {
-                        value: 12,
-                        message: "密碼長度至多 12 碼"
-                      }
-                    })}
+                    {...register('password', passwordValidation)}
                   />
                   <label htmlFor="password">Password</label>
                   { errors.password && 
                     (<p className="invalid-feedback">{ errors?.password?.message }</p>)
                   }
                 </div>
-                <button type="submit" className="btn btn-primary w-100 mt-3">登入</button>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary w-100 mt-3"
+                  disabled={ !isValid }
+                >登入</button>
               </form>
             </div>
           </div>
